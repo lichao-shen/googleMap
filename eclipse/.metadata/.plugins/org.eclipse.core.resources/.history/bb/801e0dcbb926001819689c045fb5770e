@@ -1,0 +1,50 @@
+package co.uk.pshealth.googleMapCache.service;
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.google.maps.DistanceMatrixApi;
+import com.google.maps.GeoApiContext;
+import com.google.maps.model.DistanceMatrix;
+import com.google.maps.model.DistanceMatrixRow;
+
+import co.uk.pshealth.googleMapCache.db.DBServices;
+import co.uk.pshealth.googleMapCache.model.DistanceRequest;
+
+public class GoogleDistanceAPI implements IGetDistanceMatrix {
+	
+	private static final String API_KEY = "AIzaSyAG85u75B-uXYy_exa4jIW10wFMM4MpUzA";	
+	private static final GeoApiContext context = new GeoApiContext.Builder().apiKey(API_KEY).build();
+	
+	//@Autowired
+	//DBServices dbServices;
+	
+	public GoogleDistanceAPI() {
+		
+	}
+	
+
+	@Override
+	public void getDistanceMatrix(DistanceRequest reqs) throws Exception{
+		
+		String[] origins = reqs.getOrigin_postcodes();
+		String[] destinations = reqs.getDestination_postcodes();
+		
+		System.out.println(" inside getDistanceMatrix ");
+		// lookup cache
+		//dbServices.insertDistanceMatrix("abc", "def");
+		
+		
+		/*
+		DistanceMatrix matrix = DistanceMatrixApi.getDistanceMatrix(context, origins, destinations).await();
+	    
+	    for (DistanceMatrixRow row : matrix.rows) {
+	    	
+	    	//int elesRetured = row.elements.length;
+	    	
+	    	System.out.println(" distance is  " + row.elements[0].distance.inMeters);
+	    } */
+		
+	}
+	
+}

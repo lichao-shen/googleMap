@@ -1,0 +1,92 @@
+1. db transaction
+
+2. start debugging mode 
+
+set JAVA_HOME=
+
+"C:\Program Files\Java\jdk1.8.0_111\bin\java" -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8000,suspend=n -jar target/googleMapCache-0.0.1-SNAPSHOT.jar
+
+
+
+
+3. database long run out of numbers ??
+4. URL to create tenant and contract ??
+5. security, https?
+6. duplicate destination in request ? or valid postcode? e.g. LO99 9YU
+7. sample request to google 
+https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&key=AIzaSyDELPfHoONt4vvXCpdgfiN5Sp3YhZXa4DM&origins=HA2+6AF&destinations=HA3+6PH
+invalid postcode: LO99+9YU
+8. invalid distance and time for wrong postcode is saved as -1
+Google Distance Technical Notes - 08/03/2018
+9. batch insert
+10. primary keys for cache table
+11. google api console
+12. tomcat log location
+13. logging and exception handling
+14 unit tests
+15. google api console 
+
+16. tenan doesn't exist, return 500, should be better handled.
+17. how to disable contract.
+
+18. can you use the api key to query google after contract expires ?? manually distable a contract ?
+19. mandril in production and mailgun for dev. or just curl send email.
+https://documentation.mailgun.com/en/latest/quickstart-sending.html#send-via-api
+
+
+call cronTrackQuota(str_to_date('04/06/2018', '%m/%d/%Y'));
+select sum(elementUsed) aselementsUsed from transaction
+        where tenantId = 1 and timestamp between TIMESTAMP('2018-03-20','05:00:00') and now();
+
+		
+
+------------------------------------------------------------------------
+- Service will take a JSON body as a parameter through a POST request
+- JSON body will contain a source, list of destinations and a TenantId
+Example:
+{ 
+  'OriginPostcode' : 'HA2 6EP',
+  'DestinationPostcodes' : {'HA3 6AB', 'HA4 6BC'},
+  'TenantId' : 1
+}
+- Service will check the cache, batch the postcode pairings based on the google API limits (25 destinations?) for pairings that do not exist within the cache. It will then query the google API for each batch and then combine the new results with the cached results.
+- Existence check should ignore entries in the cache older than a certain date (1 year ago?) and replace these entries with the new results from the google API.
+- Existence check should also check for the same origin postcode and destination postcode pairing in reverse and not include these in the batch.
+- Log to transaction table in DB - elements used, timestamp and tenantid
+- Run Cron job every 12? hours to count the number of credits used in the current day (5AM - 5AM?) and set counters on the TenantDailyLimitHistory table based on on this. Should also set the OutOfYearlyCredits flag on the TenantContract table if necessary.
+- If OutOfYearlyCredits is set and the daily limit is used up, then do not perform any further google API calls, but still return cached results.
+- If the service is down, retry mechanism will be handled on the client side.
+- No considerations required for google API issues.
+Tenant Table
+- Id (int, PK)
+- Tenant Name (varchar)
+- API Key (varchar)
+- ActiveTenantContractId (int, FK)
+- AlertEmailAddress (varchar)
+Cache Table
+- Id (int, PK)
+- Origin Postcode (varchar)
+- Destination Postcode (varchar)
+- TravelDistanceMetres (int)
+- TravelTimeSeconds (int)
+- Timestamp (DateTime)
+Transaction Table
+- Id (int, PK)
+- TenantId (Int, FK)
+- ElementsUsed (Int)
+- Timestamp (DateTime)
+TenantDailyHistory Table
+- Id (int, PK)
+- TenantId (Int, FK)
+- TenantContractId (Int, FK)
+- Date (Date)
+- DailyElementsUsed (Int)
+- YearlyElementsUsed (Int)
+TenantContract Table
+- Id (int, PK)
+- TenantId (int, FK)
+- StartDate (Date)
+- EndDate? (Date)
+- DailyThreshold (Int)
+- YearlyThreshold (Int)
+- OutOfYearlyCredits (Boolean)

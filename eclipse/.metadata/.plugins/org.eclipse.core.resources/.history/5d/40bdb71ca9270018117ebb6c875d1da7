@@ -1,0 +1,57 @@
+package co.uk.pshealth.googleMapCache.db;
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+
+import co.uk.pshealth.googleMapCache.dao.DistanceCacheDAO;
+import co.uk.pshealth.googleMapCache.dao.DistanceCacheRowMapper;
+
+import java.sql.Timestamp;
+import java.util.List;
+
+@Component
+public class DBServices {
+
+	@Autowired
+	JdbcTemplate jdbcTemplate;
+	
+	public List<DistanceCacheDAO> lookupDistanceCache(String origin_postcode, String destination_postcode) {
+				
+		return jdbcTemplate.query("select * from Distance_Cache where OriginPostcode=? and DestinationPostcode=?"
+			   , new Object[]{origin_postcode, destination_postcode}, new DistanceCacheRowMapper());
+		
+	}
+	
+	
+	public void insertDistanceMatrixCache(String origin, String destination, long TravelDistanceMetres, long TravelTimeSeconds) {
+		
+		System.out.println(" insert into entry into database ");
+		
+		jdbcTemplate.update("insert into Distance_Cache(Id, OriginPostcode, DestinationPostcode"
+				+ ", TravelDistanceMetres, TravelTimeSeconds, Timestamp) values(?,?,?,?,?,?)"
+				, 100, origin, destination, TravelDistanceMetres, TravelTimeSeconds, new Timestamp(System.currentTimeMillis()) );
+		
+	}
+	
+	public void insertTransactionHistory() {
+		
+		System.out.println(" insert into entry into history table ");
+		
+		
+	}
+	
+	public String findapiKeyByName(String tenantName) {
+			
+		try {
+			jdbcTemplate.queryForObject("select APIKey from Tenant where TenantName=?", new Object[] { tenantName }, String.class);
+		} catch (EmptyResultDataAccessException e) {
+			return null;
+		}
+		
+	}
+	
+	
+	
+}
